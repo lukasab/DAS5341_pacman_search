@@ -90,15 +90,14 @@ def depthFirstSearch(problem):
             result = path
             break
 
-        visited.add(state)
-        for w in problem.getSuccessors(state):
-            newPath = path + [w[1]]
-            newState = (w[0], newPath)
-            if newState[0] not in visited:
+        if state not in visited:
+            visited.add(state)
+            for w in problem.getSuccessors(state):
+                newPath = path + [w[1]]
+                newState = (w[0], newPath)
                 stack.push(newState)
 
     return result
-
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -114,10 +113,10 @@ def breadthFirstSearch(problem):
         if problem.isGoalState(node):
             result = path
             break
-
-        visited.append(node)
-        for w in problem.getSuccessors(node):
-            if w[0] not in visited:
+        
+        if node not in visited:
+            visited.append(node)
+            for w in problem.getSuccessors(node):
                 newPath = path + [w[1]]
                 newNode = (w[0], newPath)
                 queue.push(newNode)
@@ -126,8 +125,27 @@ def breadthFirstSearch(problem):
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    result = []
+    visited = []
+
+    p_queue = util.PriorityQueue()
+    start = (problem.getStartState(), [], 0)
+    p_queue.update(start,0)
+
+    while not p_queue.isEmpty():
+        (node, path, cost) = p_queue.pop()
+        if problem.isGoalState(node):
+            result = path
+            break
+
+        if node not in visited:
+            visited.append(node)
+            for w in problem.getSuccessors(node):
+                newPath = path + [w[1]]
+                newCost = cost + w[2]
+                newNode = (w[0], newPath, newCost)
+                p_queue.update(newNode, newCost)
+    return result
 
 def nullHeuristic(state, problem=None):
     """
@@ -138,8 +156,28 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    result = []
+    visited = []
+
+    p_queue = util.PriorityQueue()
+    start = (problem.getStartState(), [], 0)
+    p_queue.update(start, 0)
+
+    while not p_queue.isEmpty():
+        (node, path, cost) = p_queue.pop()
+        if problem.isGoalState(node):
+            result = path
+            break
+
+        if node not in visited:
+            visited.append(node)
+            for w in problem.getSuccessors(node):
+                newPath = path + [w[1]]
+                newCost = cost + w[2]
+                newNode = (w[0], newPath, newCost)
+                p_queue.update(newNode, newCost+heuristic(w[0],problem))
+
+    return result
 
 
 # Abbreviations
