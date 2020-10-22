@@ -40,6 +40,7 @@ from game import Actions
 import util
 import time
 import search
+import numpy as np
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -390,6 +391,22 @@ class FoodSearchProblem:
         self.startingGameState = startingGameState
         self._expanded = 0 # DO NOT CHANGE
         self.heuristicInfo = {} # A dictionary for the heuristic to store information
+        self.allFoodInitPosList = self.start[1].asList()
+        self.foodDistances = self.getDistFoods()
+
+    def getDistFoods(self):
+        nonvisited = self.allFoodInitPosList
+        distances = []
+
+        for i in nonvisited:
+            for j in nonvisited:
+                d = mazeDistance(i, j, self.startingGameState)
+                distances.append((d, i, j))
+        
+        return distances
+        #TODO: tranform this to a DataFrame so we can make the filter even faster
+
+    
 
     def getStartState(self):
         return self.start
@@ -461,7 +478,174 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    heuristic = 0
+    nonvisited = foodGrid.asList()
+    distances = []
+
+    if len(nonvisited) == 0:
+        return heuristic
+
+    for food in nonvisited:
+        a1 = np.array(food)
+        b1 = np.array(position)
+        distance = np.linalg.norm(a1-b1)
+        distances.append(distance)
+
+    distances = sorted(distances, reverse=True)
+    heuristic += distances[0]
+
+    return heuristic
+
+    pos = state[0]
+
+    # Fazer apenas uma vez e retirar as que ja foram visitadas
+    for i in nonvisited:
+        for j in nonvisited:
+            d = mazeDistance(i, j, problem.startingGameState)
+            distances.append((d, i, j))
+
+    #pos -> comida mais perto 
+    distances = sorted(distances, reverse = True)
+    heuristic += distances[0][0]
+    distanceTwo = []
+    distanceTwo.append(mazeDistance(distances[0][1],pos, problem.startingGameState))
+    distanceTwo.append(mazeDistance(distances[0][2],pos, problem.startingGameState))
+    distanceTwo = sorted(distanceTwo)
+    heuristic += distanceTwo[0]
+    
+    return heuristic
+
+def foodHeuristicSimpleEuclid2(state, problem):
+    position, foodGrid = state
+    heuristic = 0
+    nonvisited = foodGrid.asList()
+    distances = []
+
+    if len(nonvisited) == 0:
+        return heuristic
+
+    for food in nonvisited:
+        a1 = np.array(food)
+        b1 = np.array(position)
+        distance = np.linalg.norm(a1-b1)
+        distances.append(distance)
+
+    distances = sorted(distances, reverse=False)
+    heuristic += len(nonvisited)*100
+    heuristic += distances[0]
+
+    return heuristic
+
+def foodHeuristicSimpleEuclid(state, problem):
+    position, foodGrid = state
+    heuristic = 0
+    nonvisited = foodGrid.asList()
+    distances = []
+
+    if len(nonvisited) == 0:
+        return heuristic
+
+    for food in nonvisited:
+        a1 = np.array(food)
+        b1 = np.array(position)
+        distance = np.linalg.norm(a1-b1)
+        distances.append(distance)
+
+    distances = sorted(distances, reverse=True)
+    heuristic += distances[0]
+
+    return heuristic
+
+
+def foodHeuristicComplexEuclid(state, problem):
+    pos, foodGrid = state
+    heuristic = 0
+    nonvisited = foodGrid.asList()
+    distances = []
+
+    if len(nonvisited) == 0:
+        return heuristic
+
+    # Fazer apenas uma vez e retirar as que ja foram visitadas
+    for i in nonvisited:
+        for j in nonvisited:
+            a1 = np.array(i)
+            b1 = np.array(j)
+            d = np.linalg.norm(a1-b1)
+            distances.append((d, i, j))
+
+    #pos -> comida mais perto 
+    distances = sorted(distances, reverse = True)
+    heuristic += distances[0][0]
+    distanceTwo = []
+    distanceTwo.append(mazeDistance(distances[0][1],pos, problem.startingGameState))
+    distanceTwo.append(mazeDistance(distances[0][2],pos, problem.startingGameState))
+    distanceTwo = sorted(distanceTwo)
+    heuristic += distanceTwo[0]
+
+    return heuristic
+
+
+def foodHeuristicDistWall(state, problem):
+    position, foodGrid = state
+    heuristic = 0
+    nonvisited = foodGrid.asList()
+    distances = []
+
+    if len(nonvisited) == 0:
+        return heuristic
+
+    pos = state[0]
+    # Fazer apenas uma vez e retirar as que ja foram visitadas
+    for i in nonvisited:
+        for j in nonvisited:
+            d = mazeDistance(i, j, problem.startingGameState)
+            distances.append((d, i, j))
+    #pos -> comida mais perto 
+    distances = sorted(distances, reverse = True)
+    heuristic += distances[0][0]
+    distanceTwo = []
+    distanceTwo.append(mazeDistance(distances[0][1],pos, problem.startingGameState))
+    distanceTwo.append(mazeDistance(distances[0][2],pos, problem.startingGameState))
+    distanceTwo = sorted(distanceTwo)
+    heuristic += distanceTwo[0]
+    return heuristic
+
+def foodHeuristicImprovedDistWall(state, problem):
+    position, foodGrid = state
+    heuristic = 0
+    nonvisited = foodGrid.asList()
+    distances = []
+
+    if len(nonvisited) == 0:
+        return heuristic
+
+    pos = state[0]
+    foodDistances = problem.foodDistances
+
+    #TODO: after transformed to DF make filter faster
+    new_l = []
+    for i in foodDistances:
+        for j_1 in nonvisited:
+            for j_2 in nonvisited:
+                if i[1]==j_1 and i[2]==j_2:
+                    new_l.append(i)
+                    break
+    
+    distances = new_l
+    #pos -> comida mais perto 
+    distances = sorted(distances, reverse = True)
+    if len(distances) == 0:
+        return 0
+
+    heuristic += distances[0][0]
+    distanceTwo = []
+    distanceTwo.append(mazeDistance(distances[0][1],pos, problem.startingGameState))
+    distanceTwo.append(mazeDistance(distances[0][2],pos, problem.startingGameState))
+    distanceTwo = sorted(distanceTwo)
+    heuristic += distanceTwo[0]
+
+    return heuristic
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"

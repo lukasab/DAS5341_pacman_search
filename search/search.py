@@ -168,7 +168,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         if problem.isGoalState(node):
             result = path
             break
-
         if node not in visited:
             visited.append(node)
             for w in problem.getSuccessors(node):
